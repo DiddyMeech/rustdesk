@@ -3057,3 +3057,50 @@ pub mod server_side {
         jboolean::from(crate::server::is_clipboard_service_ok())
     }
 }
+
+// ==========================================
+// SupportSuite New Security FFI Bindings
+// ==========================================
+
+pub fn supportsuite_scan_open_ports() -> SyncReturn<String> {
+    SyncReturn(crate::network_scanner::scan_open_ports().unwrap_or_else(|e| format!("Error: {}", e)))
+}
+
+pub fn supportsuite_run_winget_updates() -> SyncReturn<String> {
+    SyncReturn(crate::software_updater::run_winget_updates().unwrap_or_else(|e| format!("Error: {}", e)))
+}
+
+pub fn supportsuite_analyze_event_logs() -> SyncReturn<String> {
+    SyncReturn(crate::threat_hunter::analyze_event_logs().unwrap_or_else(|e| format!("Error: {}", e)))
+}
+
+pub fn supportsuite_check_defender_status() -> SyncReturn<String> {
+    SyncReturn(crate::defender_bridge::check_defender_status().unwrap_or_else(|e| format!("Error: {}", e)))
+}
+
+pub fn supportsuite_trigger_offline_scan() -> SyncReturn<String> {
+    SyncReturn(crate::defender_bridge::trigger_offline_scan().unwrap_or_else(|e| format!("Error: {}", e)))
+}
+
+pub fn supportsuite_get_restore_points() -> SyncReturn<String> {
+    SyncReturn(crate::restore_points::get_restore_points().unwrap_or_else(|e| format!("Error: {}", e)))
+}
+
+pub fn supportsuite_create_restore_point(desc: String) -> SyncReturn<String> {
+    SyncReturn(crate::restore_points::create_restore_point(&desc).unwrap_or_else(|e| format!("Error: {}", e)))
+}
+
+pub fn supportsuite_scan_for_junk() -> SyncReturn<String> {
+    let files = crate::cleaner::scan_for_junk();
+    SyncReturn(format!("Found {} junk files/directories.", files.len()))
+}
+
+pub fn supportsuite_clean_junk() -> SyncReturn<String> {
+    let p = crate::cleaner::scan_for_junk();
+    let res = crate::cleaner::clean_junk(p);
+    match res {
+        Ok(c) => SyncReturn(format!("Cleaned {} items.", c)),
+        Err(e) => SyncReturn(format!("Error during cleanup: {}", e))
+    }
+}
+

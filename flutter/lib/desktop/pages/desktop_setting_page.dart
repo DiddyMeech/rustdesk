@@ -58,6 +58,7 @@ enum SettingsTabKey {
   plugin,
   account,
   printer,
+  supportsuite,
   about,
 }
 
@@ -80,6 +81,7 @@ class DesktopSettingPage extends StatefulWidget {
     if (isWindows &&
         bind.mainGetBuildinOption(key: kOptionHideRemotePrinterSetting) != 'Y')
       SettingsTabKey.printer,
+    SettingsTabKey.supportsuite,
     SettingsTabKey.about,
   ];
 
@@ -208,6 +210,10 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
           settingTabs
               .add(_TabInfo(tab, 'Printer', Icons.print_outlined, Icons.print));
           break;
+        case SettingsTabKey.supportsuite:
+          settingTabs
+              .add(_TabInfo(tab, 'SupportSuite', Icons.admin_panel_settings_outlined, Icons.admin_panel_settings));
+          break;
         case SettingsTabKey.about:
           settingTabs
               .add(_TabInfo(tab, 'About', Icons.info_outline, Icons.info));
@@ -241,6 +247,9 @@ class _DesktopSettingPageState extends State<DesktopSettingPage>
           break;
         case SettingsTabKey.printer:
           children.add(const _Printer());
+          break;
+        case SettingsTabKey.supportsuite:
+          children.add(const _SupportSuiteTab());
           break;
         case SettingsTabKey.about:
           children.add(const _About());
@@ -3111,4 +3120,127 @@ void changeSocks5Proxy() async {
   });
 }
 
+class _SupportSuiteTab extends StatefulWidget {
+  const _SupportSuiteTab({Key? key}) : super(key: key);
+  @override
+  State<_SupportSuiteTab> createState() => _SupportSuiteTabState();
+}
+
+class _SupportSuiteTabState extends State<_SupportSuiteTab> {
+  String statusMessage = "Idle";
+
+  Future<void> _callModule(String name, Future<String> Function() action) async {
+    setState(() => statusMessage = "Running $name...");
+    try {
+      final res = await action();
+      setState(() => statusMessage = "[$name] Success: $res");
+    } catch (e) {
+      setState(() => statusMessage = "[$name] Error: $e");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        _Card(title: 'SupportSuite Advanced Security & IT Tools', children: [
+           Padding(
+             padding: const EdgeInsets.only(left: 15, bottom: 10),
+             child: Text(
+               "Current Status: $statusMessage",
+               style: TextStyle(color: MyTheme.accent, fontWeight: FontWeight.bold),
+             )
+           ),
+           Divider(),
+           ListTile(
+              leading: Icon(Icons.security),
+              title: Text('Threat Hunter & Event Logs'),
+              subtitle: Text('Scan Windows Event Logs for suspicious activity.'),
+              trailing: ElevatedButton(
+                onPressed: () => _callModule("Threat Hunter", () async => PlatformFFI.instance.ffiBind.supportsuiteAnalyzeEventLogs()),
+                child: Text('Analyze'),
+              ),
+           ),
+            ListTile(
+              leading: Icon(Icons.radar),
+              title: Text('Open Port & Network Scanner'),
+              subtitle: Text('Scan for active listeners and potential anomalies.'),
+              trailing: ElevatedButton(
+                onPressed: () => _callModule("Network Scan", () async => PlatformFFI.instance.ffiBind.supportsuiteScanOpenPorts()),
+                child: Text('Scan'),
+              ),
+           ),
+           ListTile(
+              leading: Icon(Icons.update),
+              title: Text('Automated Winget Updater'),
+              subtitle: Text('Update all installed software silently via Winget.'),
+              trailing: ElevatedButton(
+                onPressed: () => _callModule("Winget", () async => PlatformFFI.instance.ffiBind.supportsuiteRunWingetUpdates()),
+                child: Text('Update All'),
+              ),
+           ),
+           ListTile(
+              leading: Icon(Icons.shield),
+              title: Text('Defender & Security Status'),
+              subtitle: Text('Verify real-time protection and trigger offline scans.'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  OutlinedButton(
+                    onPressed: () => _callModule("Def Status", () async => PlatformFFI.instance.ffiBind.supportsuiteCheckDefenderStatus()),
+                    child: Text('Check Status'),
+                  ),
+                  SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => _callModule("Offline Scan", () async => PlatformFFI.instance.ffiBind.supportsuiteTriggerOfflineScan()),
+                    child: Text('Offline Scan'),
+                  ),
+                ],
+              )
+           ),
+           ListTile(
+              leading: Icon(Icons.history),
+              title: Text('System Restore Points'),
+              subtitle: Text('List and create Windows restore points.'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  OutlinedButton(
+                    onPressed: () => _callModule("Get Points", () async => PlatformFFI.instance.ffiBind.supportsuiteGetRestorePoints()),
+                    child: Text('List'),
+                  ),
+                  SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => _callModule("Create Point", () async => PlatformFFI.instance.ffiBind.supportsuiteCreateRestorePoint(desc: "SupportSuite Backup")),
+                    child: Text('Create'),
+                  ),
+                ],
+              )
+           ),
+            ListTile(
+              leading: Icon(Icons.delete_sweep),
+              title: Text('System Junk Cleaner'),
+              subtitle: Text('Find and eliminate unneeded temp files.'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  OutlinedButton(
+                    onPressed: () => _callModule("Scan Junk", () async => PlatformFFI.instance.ffiBind.supportsuiteScanForJunk()),
+                    child: Text('Scan'),
+                  ),
+                  SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => _callModule("Clean Junk", () async => PlatformFFI.instance.ffiBind.supportsuiteCleanJunk()),
+                    child: Text('Clean'),
+                  ),
+                ],
+              )
+           ),
+        ]),
+      ],
+    ).marginOnly(bottom: _kListViewBottomMargin);
+  }
+}
+
 //#endregion
+
